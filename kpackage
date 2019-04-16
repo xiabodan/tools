@@ -1,0 +1,49 @@
+#!/bin/bash
+  # set -x
+
+  if [ -n "$1" ] ;then
+    ADB=$1
+  else
+    ADB=adn
+  fi
+
+  android=`$ADB shell getprop ro.build.version.release | awk -F '.' '{print $1}'`
+  echo android version: $android " " `$ADB shell getprop ro.build.version.release`
+
+  if [ $android -ge 8 ]; then
+    process=$($ADB shell ps -A)
+  else
+    process=$($ADB shell ps)
+  fi
+
+  $ADB shell pm list package -3 | awk -F ':' '{print $2}' > 3_packages
+  cat 3_packages | while read line1
+  do
+    line=`echo $line1 | tr -d "\r"`
+    # filter some package
+    # echo in $line
+    if [[ $line = "com.github.shadowsocks" ]]; then
+      continue
+    fi
+    if [[ $line = "com.tencent.qqpinyin" ]]; then
+      continue
+    fi
+    if [[ $line = "in.zhaoj.shadowsocksr" ]]; then
+      continue
+    fi
+    if [[ $line = "com.YoStarJP.AzurLane" ]]; then
+      continue
+    fi
+
+    isRunning=$(echo $process | grep "$line")
+    if [[ $isRunning = "" ]]; then
+      continue
+    fi
+
+    echo force-stop : $line
+    $ADB shell am force-stop $line &
+    # $ADB shell pm clear $line
+  done
+
+  $ADB shell am force-stop android.process.media &
+  sudo rm 3_packages
