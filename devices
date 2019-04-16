@@ -1,0 +1,33 @@
+#!/bin/bash
+  # set -x
+
+  # echo $(adb version)
+
+  adb devices > devices.txt
+
+  filenum=1
+  while read line
+  do
+    # filter the first line
+    if [[ $line = "List of devices attached" ]]; then
+      continue
+    fi
+    # filter the last empty line
+    if [ x"$line" = x ]; then
+      continue
+    fi
+    # filter illegal line
+    word=$(echo $line | awk -F ' ' '{print $2}')
+    if [[ $word != "device" ]]; then
+      continue
+    fi
+
+    device=$(echo $line | awk -F ' ' '{print $1}')
+    sudo echo 'adb -s' $device '$@' > adb$filenum
+    sudo chmod 777 adb$filenum
+    sudo mv adb$filenum ~/bin
+    echo adb$filenum `cat ~/bin/adb$filenum`
+    filenum=`expr $filenum + 1`
+  done < devices.txt
+
+  sudo rm devices.txt

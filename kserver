@@ -1,0 +1,5 @@
+
+echo $(adb version)
+
+sudo adb kill-server
+sudo adb start-server
